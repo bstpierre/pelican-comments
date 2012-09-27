@@ -19,7 +19,7 @@ Pelican-comments is not part of the default pelican distribution.
 
 Install from github using pip:
 
-    pip install git://github.com/bstpierre/pelican-comments#egg=pelican_comments
+    pip install git+git://github.com/bstpierre/pelican-comments#egg=pelican_comments
 
 In your settings.py, add:
 
