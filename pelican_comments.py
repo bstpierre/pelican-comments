@@ -95,7 +95,8 @@ class CommentReader(object):
 
         for slug, comments in self._comments.items():
             comments.sort()
-            
+            for n, comment in enumerate(comments):
+                comment.cid = n
 
     def get_comments(self, slug):
         return self._comments[slug]
