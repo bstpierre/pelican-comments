@@ -1,0 +1,72 @@
+#!/usr/bin/python
+
+from codecs import open
+import sys
+import xml.etree.ElementTree as etree
+
+
+def wp2comments(xml):
+    etree.register_namespace('wp', 'http://wordpress.org/export/1.0/')
+
+    #xmlfile = open(xml, encoding='utf-8', mode='r').read()
+    tree = etree.parse(xml)
+    root = tree.getroot()
+    items = root.findall('.//item')
+
+    n = 0
+
+    for item in items:
+        title = item.find('title')
+        if title is None: continue
+
+        # Only fetch comments from published posts.
+        status = item.find('{http://wordpress.org/export/1.0/}status')
+        if status is None or status.text != 'publish':
+            continue
+
+        slug = item.find('{http://wordpress.org/export/1.0/}post_name')
+        if slug is None:
+            print 'WARNING: skipping "%s" with no post_name'
+            continue
+        slug = slug.text
+
+        comments = item.findall('{http://wordpress.org/export/1.0/}comment')
+        if not comments:
+            # No comments found for this post.
+            continue
+
+        for comment in comments:
+            def comment_tag(tag):
+                tagns = tag.replace(
+                    'wp:', '{http://wordpress.org/export/1.0/}')
+                result = comment.find(tagns)
+                if result is None:
+                    return ''
+                else:
+                    return result.text
+
+            status = comment_tag('wp:comment_approved')
+            if status != '1':
+                continue
+
+            author = comment_tag('wp:comment_author')
+            ip = comment_tag('wp:comment_author_IP')
+            date = comment_tag('wp:comment_date_gmt')
+            email = comment_tag('wp:comment_author_email')
+            url = comment_tag('wp:comment_author_url')
+            content = comment_tag('wp:comment_content')
+
+            n += 1
+            f = open('comments/%s-%d.md' % (slug, n),
+                     encoding='utf-8', mode='w')
+            f.write(u'post_id: %s\n' % (slug, ))
+            f.write(u'Author: %s\n' % (author, ))
+            f.write(u'Date: %s\n' % (date, ))
+            f.write(u'Author_Email: %s\n' % (email, ))
+            f.write(u'Author_IP: %s\n' % (ip, ))
+            f.write(u'\n%s\n' % (content, ))
+            f.close()
+
+
+if __name__ == '__main__':
+   wp2comments(sys.argv[1])
