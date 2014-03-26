@@ -2,11 +2,10 @@
 
 from codecs import open
 import sys
-import xml.etree.ElementTree as etree
+from lxml import etree
 
 
 def wp2comments(xml):
-    etree.register_namespace('wp', 'http://wordpress.org/export/1.0/')
 
     #xmlfile = open(xml, encoding='utf-8', mode='r').read()
     tree = etree.parse(xml)
@@ -20,26 +19,24 @@ def wp2comments(xml):
         if title is None: continue
 
         # Only fetch comments from published posts.
-        status = item.find('{http://wordpress.org/export/1.0/}status')
+        status = item.find('wp:status', namespaces=root.nsmap)
         if status is None or status.text != 'publish':
             continue
 
-        slug = item.find('{http://wordpress.org/export/1.0/}post_name')
+        slug = item.find('wp:post_name', namespaces=root.nsmap)
         if slug is None:
             print 'WARNING: skipping "%s" with no post_name'
             continue
         slug = slug.text
 
-        comments = item.findall('{http://wordpress.org/export/1.0/}comment')
+        comments = item.findall('wp:comment', namespaces=root.nsmap)
         if not comments:
             # No comments found for this post.
             continue
 
         for comment in comments:
             def comment_tag(tag):
-                tagns = tag.replace(
-                    'wp:', '{http://wordpress.org/export/1.0/}')
-                result = comment.find(tagns)
+                result = comment.find(tag, namespaces=root.nsmap)
                 if result is None:
                     return ''
                 else:
