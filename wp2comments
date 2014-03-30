@@ -2,8 +2,10 @@
 
 from codecs import open
 import sys
+import os
 from lxml import etree
 
+COMMENT_DIR='comments'
 
 def wp2comments(xml):
 
@@ -13,6 +15,12 @@ def wp2comments(xml):
     items = root.findall('.//item')
 
     n = 0
+
+    if not os.path.exists(COMMENT_DIR):
+        os.makedirs(COMMENT_DIR)
+    elif not os.path.isdir(COMMENT_DIR):
+        print('"%s" exists but is not a directory!' % COMMENT_DIR)
+        sys.exit(1)
 
     for item in items:
         title = item.find('title')
@@ -54,7 +62,7 @@ def wp2comments(xml):
             content = comment_tag('wp:comment_content')
 
             n += 1
-            f = open('comments/%s-%d.md' % (slug, n),
+            f = open(os.path.join(COMMENT_DIR, '%s-%d.md' % (slug, n)),
                      encoding='utf-8', mode='w')
             f.write(u'post_id: %s\n' % (slug, ))
             f.write(u'Author: %s\n' % (author, ))
