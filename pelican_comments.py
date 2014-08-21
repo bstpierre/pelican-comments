@@ -90,6 +90,9 @@ class CommentReader(object):
                 content_class=Comment,
                 context=generator.context)
 
+            if 'post_id' not in comment.metadata:
+                raise Exception("comment %s does not have a post_id" % (
+                    comment_filename, ))
             self._comments[comment.metadata['post_id']].append(comment)
 
         for slug, comments in self._comments.items():
