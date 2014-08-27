@@ -5,17 +5,20 @@
 Static comments plugin for Pelican
 ================================
 
-Adds comments variable to article's context
+Adds comments variable to article's context. Comments by default should be
+in a comments subdirectory of your content directory.
 
 Settings
 --------
 
 To enable, add:
 
-    from pelican_comments import comments
-    PLUGINS = [comments]
+    PLUGINS = ['pelican_comments']
 
-to your settings.py.
+to your pelicanconf.py. If you get warnings about slugs, also add the
+following to prevent pelican trying to treat comment files as articles:
+
+    ARTICLE_EXCLUDES = ['comments', 'pages']
 
 Usage
 -----
@@ -52,23 +55,17 @@ import pelican.signals as signals
 import pelican.generators as generators
 import pelican.readers as readers
 
+from pelican.contents import Content
 
-class Comment(object):
-    def __init__(self, content, metadata):
-        self.content = content
-
-        properties = [
-            'author',
-            'date',
-            ]
-
-        for property in properties:
-            setattr(self, property, metadata.get(property, ''))
+class Comment(Content):
+    mandatory_properties = ('post_id', 'author')
+    default_template = 'comment' # this is required, but not used
 
     def __cmp__(self, other):
         """
         Comment comparison is by date. This is so that a comment list
-        can easily be sorted by date.
+        can easily be sorted by date. The date attribute will be
+        automatically set from metadata by Content base class
         """
         if self.date == other.date:
             return 0
@@ -81,17 +78,22 @@ class Comment(object):
 class CommentReader(object):
     def __init__(self, generator):
         self._comments = collections.defaultdict(list)
+        reader = readers.Readers(settings=generator.settings)
 
         comments_dir = generator.settings.get('COMMENTS_DIR', 'comments')
         comment_filenames = generator.get_files(comments_dir)
+
         for comment_filename in comment_filenames:
-            content, metadata = readers.read_file(comment_filename)
-            if 'post_id' not in metadata:
+            comment = reader.read_file(
+                base_path=generator.settings['PATH'],
+                path=comment_filename,
+                content_class=Comment,
+                context=generator.context)
+
+            if 'post_id' not in comment.metadata:
                 raise Exception("comment %s does not have a post_id" % (
                     comment_filename, ))
-
-            comment = Comment(content, metadata)
-            self._comments[metadata['post_id']].append(comment)
+            self._comments[comment.metadata['post_id']].append(comment)
 
         for slug, comments in self._comments.items():
             comments.sort()
@@ -116,4 +118,4 @@ def add_comments(generator, metadata):
 
 def register():
     signals.article_generator_init.connect(comment_initialization)
-    signals.article_generate_context.connect(add_comments)
+    signals.article_generator_context.connect(add_comments)
