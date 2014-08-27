@@ -25,7 +25,7 @@ In your settings.py, add:
 
     PLUGINS = ['pelican_comments']
     COMMENTS_DIR = ['comments'] # Optional: 'comments' is the default
-	ARTICLE_EXCLUDES = ['comments', 'pages'] # Optional: Stops pelican trying to validate comments as articles
+    ARTICLE_EXCLUDES = ['comments', 'pages'] # Optional: Stops pelican trying to validate comments as articles
 
 In your template, add:
 
