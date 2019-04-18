@@ -60,6 +60,7 @@ from pelican.contents import Content
 class Comment(Content):
     mandatory_properties = ('post_id', 'author')
     default_template = 'comment' # this is required, but not used
+    default_status = 'published'
 
     def __cmp__(self, other):
         """
