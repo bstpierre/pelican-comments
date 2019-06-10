@@ -48,6 +48,7 @@ Usage
 #    See the file LICENSE.
 
 
+import sys
 
 import collections
 
@@ -57,7 +58,32 @@ import pelican.readers as readers
 
 from pelican.contents import Content
 
-class Comment(Content):
+
+# Python 3 __cmp__ compatibility mixin from https://stackoverflow.com/a/39166382/807307
+PY3 = sys.version_info[0] >= 3
+if PY3:
+    def cmp(a, b):
+        return (a > b) - (a < b)
+    # mixin class for Python3 supporting __cmp__
+    class PY3__cmp__:
+        def __eq__(self, other):
+            return self.__cmp__(other) == 0
+        def __ne__(self, other):
+            return self.__cmp__(other) != 0
+        def __gt__(self, other):
+            return self.__cmp__(other) > 0
+        def __lt__(self, other):
+            return self.__cmp__(other) < 0
+        def __ge__(self, other):
+            return self.__cmp__(other) >= 0
+        def __le__(self, other):
+            return self.__cmp__(other) <= 0
+else:
+    class PY3__cmp__:
+        pass
+
+
+class Comment(Content, PY3__cmp__):
     mandatory_properties = ('post_id', 'author')
     default_template = 'comment' # this is required, but not used
     default_status = 'published'
@@ -74,6 +100,9 @@ class Comment(Content):
             return -1
         else:
             return 1
+
+    def __hash__(self):
+        return hash((self.post_id, self.author, self.date, self._content))
 
 
 class CommentReader(object):
