@@ -1,3 +1,8 @@
+# Abandoned
+
+This plugin is no longer in active use and development has been abandoned.
+The github repo is archived, and will eventually be deleted.
+
 # pelican-comments
 
 This is a plugin for [pelican](http://getpelican.com) to provide static comments.
